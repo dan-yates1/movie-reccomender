@@ -7,6 +7,7 @@ Base = declarative_base()
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 class UserRating(Base):
     __tablename__ = "user_ratings"
 
@@ -15,5 +16,5 @@ class UserRating(Base):
     movie_id = Column(Integer, index=True)
     rating = Column(Float, index=True)
 
-# Create tables
+
 Base.metadata.create_all(bind=engine)

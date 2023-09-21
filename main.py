@@ -7,12 +7,28 @@ from typing import List
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:8000",
+    "http://localhost",
+    "null"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 movies = pd.read_csv('movies.csv')
 ratings = pd.read_csv('ratings.csv')
@@ -65,16 +81,10 @@ async def get_recommendations(user_id: int, num_movies: int = 10):
 
 @app.post("/initial_recommendations/")
 async def initial_recommendations(ratings: dict):
-    # The ratings dictionary will contain movie IDs as keys and ratings as values.
-
-    # For demonstration, if a user likes a movie, we'll just recommend movies that are
-    # most similar to the one liked. A more sophisticated implementation can combine multiple
-    # ratings and use a recommendation model.
-
     movie_id = list(ratings.keys())[0]
     rating_value = ratings[movie_id]
 
-    if rating_value == 'like':  # Use collaborative filtering to find similar movies
+    if rating_value == 'like':
         similar_movies = cosine_similarity(user_movie_ratings.fillna(0).T)
         similar_movies_df = pd.DataFrame(
             similar_movies, index=user_movie_ratings.columns, columns=user_movie_ratings.columns)
@@ -85,8 +95,6 @@ async def initial_recommendations(ratings: dict):
         return {"movies": recommended_movies}
 
     elif rating_value == 'dislike':
-        # Here, you can recommend some other popular movies or use another logic.
-        # Just an example to return top 5 movies.
         return {"movies": get_top_movies(5)}
 
 
